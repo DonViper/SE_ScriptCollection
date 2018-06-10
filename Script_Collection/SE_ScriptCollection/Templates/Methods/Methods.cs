@@ -30,7 +30,7 @@ namespace SE_ScriptCollection.Templates.Methods
         List<IMyTerminalBlock> G_batteries;
         IMyShipConnector G_connector;
 
-        Color [] G_alertColor = { new Color ( 255, 0, 0 ), new Color ( 0, 230, 0 ) };   //  Color of display when Alerting (Red) or not (Green)
+        Color [] G_alertColor = { new Color ( 255, 0, 0 ), new Color ( 0, 255, 0 ) };   //  Color of display when Alerting (Red) or not (Green)
         bool G_capacityAlert;
         bool G_fuelalert;
 
