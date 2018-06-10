@@ -47,13 +47,13 @@ namespace GlacialisTechFacility
         {
             Echo ( Run_Indicator () );  //  Visual representation of the scrip running
 
-            Fecth_LCD_Block_Group ();
+            G_useBlockGroup = Fecth_LCD_Block_Group ();
 
             if ( G_useBlockGroup == true )
             {
                 Docking ();
             }
-            else if ( G_useBlockGroup == false )  //  If there is no block group
+            else //  If there is no block group
             {
                 LCD = GridTerminalSystem.GetBlockWithName ( SINGLE_LCD_NAME ) as IMyTextPanel;
                 if ( LCD != null )
@@ -75,32 +75,33 @@ namespace GlacialisTechFacility
         /// Fetch LCD block group if there is one
         /// </summary>
         /// <returns></returns>
-        private void Fecth_LCD_Block_Group ()
+        private bool Fecth_LCD_Block_Group ()
         {
             List<IMyTerminalBlock> blocks = new List<IMyTerminalBlock> ();
             GridTerminalSystem.GetBlockGroupWithName ( LCD_BLOCK_GROUP_NAME ).GetBlocks ( blocks );
 
-            if ( blocks != null )
+            if ( blocks.Count < 0 )
             {
                 G_screens = new List<IMyTextPanel> ();
 
                 for ( int element = 0; element < blocks.Count; element++ )
                 {
                     IMyTextPanel LCD = blocks [element] as IMyTextPanel;
-                    LCD.SetShowOnScreen ( VRage.Game.GUI.TextPanel.ShowTextOnScreenFlag.PUBLIC );
-                    if ( LCD.ShowOnScreen != VRage.Game.GUI.TextPanel.ShowTextOnScreenFlag.PUBLIC )
+                    LCD.ShowPublicTextOnScreen ();
+                    if ( LCD.ShowText != true )
                     {
                         Echo ( $"LCD with name ({LCD.CustomName}) could not be set to show public text on screen!" );
-                        G_useBlockGroup = false;
                     }
                     LCD.FontColor = new Color ( 0, 255, 0 );
                     G_screens.Add ( LCD );
                 }
+
+                return true;
             }
-            else
-            {
-                Echo ( $"No LCD block group with the name ({LCD_BLOCK_GROUP_NAME}) found. Switching to single LCD use." );
-            }
+
+            Echo ( $"No LCD block group with the name ({LCD_BLOCK_GROUP_NAME}) found. Switching to single LCD use." );
+
+            return false;
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace GlacialisTechFacility
                     }
                 }
             }
-            else if ( LCD != null ) //  If there is no bloc group
+            else if ( LCD != null ) //  If there is no block group
             {
                 Show_Simple_Docking_Info ();
             }
