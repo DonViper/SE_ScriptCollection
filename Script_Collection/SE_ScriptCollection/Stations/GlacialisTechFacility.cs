@@ -25,12 +25,14 @@ namespace GlacialisTechFacility
         const string BASE_NAME = "|";
         const string LCD_BLOCK_GROUP_NAME = "LCD's";
         const string SINGLE_LCD_NAME = "LCD";
-        readonly string [] LCD_TAGS = { "<Power>", "<Docking>", "<Storage>", "<Inventory>" };
+        const string MASTER_LCD = "Master";
+        readonly string [] LCD_TAGS = { "<Gas>", "<Docking>", "<Damage>" };
         #endregion
         bool G_useBlockGroup = true;
 
         List<IMyTextPanel> G_screens;
         IMyTextPanel G_LCD;
+        IMyTextPanel G_masterLCD;
 
         int G_isRunning = 0;
         string runAnimation;
@@ -67,6 +69,7 @@ namespace GlacialisTechFacility
                 if ( G_LCD != null )
                 {
                     G_LCD.ShowPublicTextOnScreen ();
+                    G_LCD.WritePublicText ( "<--------------Status-------------->\n", false );
                 }
                 else
                 {
@@ -74,14 +77,63 @@ namespace GlacialisTechFacility
                 }
 
             }
+            if ( G_useBlockGroup == true )
+            {
+                for ( int i = 0; i < G_screens.Count; i++ )
+                {
+                    for ( int j = 0; j < LCD_TAGS.Length; j++ )
+                    {
+                        if ( !G_screens [i].CustomName.Contains ( LCD_TAGS [j] ) )
+                        {
+                            G_screens [i].WritePublicText ( "<--------------Status-------------->\n", false );
+                        }
+                    }
+
+                }
+            }
             //  If there are no errors
-            else if ( G_useBlockGroup == true && errorFLAG == false )
+            if ( G_useBlockGroup == true && errorFLAG == false )
             {
                 debugText = "None";
             }
 
-            Docking_Status ();
+            if ( G_LCD != null || G_useBlockGroup == true )
+            {
+                if ( argument != null )
+                {
+                    int key;
+                    if ( int.TryParse ( argument, out key ) )
+                    {
+                        switch ( key )
+                        {
+                            case 0:
+                                G_masterLCD.CustomName = $"{MASTER_LCD}";
+                                G_masterLCD.CustomName = $"{G_masterLCD.CustomName} {LCD_TAGS [0]}";
+                                break;
+                            case 1:
+                                G_masterLCD.CustomName = $"{MASTER_LCD}";
+                                G_masterLCD.CustomName = $"{G_masterLCD.CustomName} {LCD_TAGS [1]}";
+                                break;
 
+                            case 9:
+                                G_masterLCD.CustomName = $"{MASTER_LCD}";
+                                break;
+
+                            default:
+                                G_masterLCD.CustomName = $"{MASTER_LCD}";
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    G_masterLCD.CustomName = $"{MASTER_LCD}";
+                }
+
+                Docking_Status ();
+
+                Tank_Status ();
+            }
         }
 
         /// <summary>
@@ -108,6 +160,13 @@ namespace GlacialisTechFacility
                 {
                     IMyTextPanel LCD = blocks [element] as IMyTextPanel;
                     LCD.ShowPublicTextOnScreen ();  //  Setting screens to display text
+
+                    //  If there is a master screen
+                    if ( LCD.CustomName.Contains ( MASTER_LCD ) && G_masterLCD == null )
+                    {
+                        LCD.CustomName = MASTER_LCD;    //  In case the master screen has a tag reset to default
+                        G_masterLCD = LCD;
+                    }
 
                     //  If the screen still does not display text
                     if ( LCD.ShowText != true )
@@ -166,6 +225,7 @@ namespace GlacialisTechFacility
             else
             {
                 debugText = "No connectors found!";
+                connectors = null;
                 errorFLAG = true;
 
             }
@@ -181,7 +241,7 @@ namespace GlacialisTechFacility
             Fecth_Connectors ();
 
             //  When using block group
-            if ( G_useBlockGroup == true )
+            if ( G_useBlockGroup == true && connectors != null && connectors.Count > 0 )
             {
                 Group_Docking ();
             }
@@ -198,7 +258,15 @@ namespace GlacialisTechFacility
         {
             for ( int j = 0; j < G_screens.Count; j++ )
             {
-                G_screens [j].WritePublicText ( "<---Ship Status--->\n", false );
+                if ( !G_screens [j].CustomName.Contains ( LCD_TAGS [0] ) && !G_screens [j].CustomName.Contains ( LCD_TAGS [1] ) )
+                {
+                    G_screens [j].WritePublicText ( $"<---Ship Status--->\nLocked: {Get_Amount_Connected ()}/{connectors.Count}\n", true );
+                }
+                else if ( G_screens [j].CustomName.Contains ( LCD_TAGS [1] ) )
+                {
+                    G_screens [j].WritePublicText ( "<---Ship Status--->\n", false );
+                }
+
             }
 
             // Looping trough connectors
@@ -211,13 +279,9 @@ namespace GlacialisTechFacility
                     for ( int j = 0; j < G_screens.Count; j++ )
                     {
                         //  If a screen has a tag show advanced version
-                        if ( G_screens [i].CustomName.Contains ( LCD_TAGS [1] ) )
+                        if ( G_screens [j].CustomName.Contains ( LCD_TAGS [1] ) && G_screens [j].CustomName.Contains ( LCD_TAGS [0] ) == false )
                         {
-                            G_screens [j].WritePublicText ( $"{connectors [i].CustomName}\n<>\n{connectors [i].OtherConnector.CubeGrid.CustomName}\n\n", true );
-                        }
-                        else    //  If there's no tag show simple version
-                        {
-                            G_screens[i].WritePublicText ( $"Locked: {Get_Amount_Connected ()}/{connectors.Count}\n", true );
+                            G_screens [j].WritePublicText ( $"{( ( connectors [i].CustomName.Length >= 16 ) ? ( connectors [i].CustomName.Substring ( 0, 16 ) ) : ( connectors [i].CustomName ) )} |<>| {( ( connectors [i].OtherConnector.CubeGrid.CustomName.Length >= 16 ) ? ( connectors [i].OtherConnector.CubeGrid.CustomName.Substring ( 0, 16 ) ) : ( connectors [i].OtherConnector.CubeGrid.CustomName ) ) }\n", true );
                         }
                     }
                 }
@@ -228,9 +292,9 @@ namespace GlacialisTechFacility
                     for ( int j = 0; j < G_screens.Count; j++ )
                     {
                         //  If a screen has a tag
-                        if ( G_screens [i].CustomName.Contains ( LCD_TAGS [1] ) )
+                        if ( G_screens [j].CustomName.Contains ( LCD_TAGS [1] ) && G_screens [j].CustomName.Contains ( LCD_TAGS [0] ) == false )
                         {
-                            G_screens [j].WritePublicText ( $"{connectors [i].CustomName}\n</>\n{connectors [i].OtherConnector.CubeGrid.CustomName}\n\n", true );
+                            G_screens [j].WritePublicText ( $"{( ( connectors [i].CustomName.Length >= 16 ) ? ( connectors [i].CustomName.Substring ( 0, 16 ) ) : ( connectors [i].CustomName ) )} |</>| {( ( connectors [i].OtherConnector.CubeGrid.CustomName.Length >= 16 ) ? ( connectors [i].OtherConnector.CubeGrid.CustomName.Substring ( 0, 16 ) ) : ( connectors [i].OtherConnector.CubeGrid.CustomName ) ) }\n", true );
                         }
                     }
                 }
@@ -241,13 +305,14 @@ namespace GlacialisTechFacility
                     for ( int j = 0; j < G_screens.Count; j++ )
                     {
                         //  If a screen has a tag
-                        if ( G_screens [i].CustomName.Contains ( LCD_TAGS [1] ) )
+                        if ( G_screens [j].CustomName.Contains ( LCD_TAGS [1] ) && G_screens [j].CustomName.Contains ( LCD_TAGS [0] ) == false )
                         {
-                            G_screens [j].WritePublicText ( $"{connectors [i].CustomName}\n()\n", true );
+                            G_screens [j].WritePublicText ( $"{( ( connectors [i].CustomName.Length >= 16 ) ? ( connectors [i].CustomName.Substring ( 0, 16 ) ) : ( connectors [i].CustomName ) )} |<|\n", true );
                         }
                     }
                 }
             }
+
         }
 
         /// <summary>
@@ -278,9 +343,91 @@ namespace GlacialisTechFacility
         {
             if ( G_LCD != null )
             {
-                G_LCD.WritePublicText ( "<---Ship Status--->\n", false );
-                G_LCD.WritePublicText ( $"Locked: {Get_Amount_Connected ()}/{connectors.Count}\n", true );
+                G_LCD.WritePublicText ( $"<---Ship Status--->\nLocked: {Get_Amount_Connected ()}/{connectors.Count}\n", true );
             }
+        }
+
+        /// <summary>
+        /// Status for Oxygen and hydrogen on the grid
+        /// </summary>
+        private void Tank_Status ()
+        {
+            List<IMyGasTank> allTanks = new List<IMyGasTank> ();
+            GridTerminalSystem.GetBlocksOfType ( allTanks );
+
+            List<IMyGasTank> hydro = new List<IMyGasTank> ();
+            List<IMyGasTank> oxy = new List<IMyGasTank> ();
+
+            double hydroLevel = 0;
+            double oxyLevel = 0;
+
+            //  If there is tanks on the grid
+            if ( allTanks.Count > 0 )
+            {
+                for ( int i = 0; i < allTanks.Count; i++ )
+                {
+                    //  If it's a hydrogen tank
+                    if ( allTanks [i].CustomName.Contains ( "Hydrogen" ) && allTanks [i].CustomName.Contains ( BASE_NAME ) )
+                    {
+                        hydroLevel += allTanks [i].FilledRatio;
+                        hydro.Add ( allTanks [i] );
+                    }
+                    //  If it's a oxygen tank
+                    else if ( allTanks [i].CustomName.Contains ( "Oxygen" ) && allTanks [i].CustomName.Contains ( BASE_NAME ) )
+                    {
+                        oxyLevel += allTanks [i].FilledRatio;
+                        oxy.Add ( allTanks [i] );
+                    }
+                }
+
+                //  If there's no hydrogen tanks on the grid
+                if ( hydro.Count <= 0 )
+                {
+                    debugText = $"No hydrogen tanks with ({BASE_NAME}) in their name!";
+                }
+                //  If there's no oxygen tanks on the grid
+                else if ( oxy.Count <= 0 )
+                {
+                    debugText = $"No oxygen tanks with ({BASE_NAME}) in their name!";
+                }
+
+                hydroLevel = ( hydroLevel / hydro.Count ) * 100;
+                oxyLevel = ( oxyLevel / oxy.Count ) * 100;
+
+
+                if ( G_useBlockGroup == true )
+                {
+                    for ( int i = 0; i < G_screens.Count; i++ )
+                    {
+                        //  If the screens name contains the <Gas> tag
+                        if ( G_screens [i].CustomName.Contains ( LCD_TAGS [0] ) )
+                        {
+                            G_screens [i].WritePublicText ( $"<--Oxygen and Hydrogen status-->\nHydro tanks: {hydro.Count} |<->| Oxy Tanks: {oxy.Count}\nHydrogen: {hydroLevel}%\nOxygen: {oxyLevel}%\n", false );
+                        }
+                        //  If the screens name does not contain any tags
+                        else if ( !G_screens [i].CustomName.Contains ( LCD_TAGS [1] ) )
+                        {
+                            G_screens [i].WritePublicText ( $"<--Gas status-->\nHydro: {hydroLevel}% |<->| Oxy: {oxyLevel}%\n", true );
+                        }
+                    }
+                }
+                //  If single mode is active
+                else
+                {
+                    G_LCD.WritePublicText ( $"<--Gas status-->\nHydro: {hydroLevel}% |<->| Oxy: {oxyLevel}%\n", true );
+                }
+            }
+            //  If there is no tanks on the grid
+            else
+            {
+                errorFLAG = true;
+                debugText = "No tanks available!";
+            }
+        }
+
+        private void Damage_Status ()
+        {
+
         }
 
         /// <summary>

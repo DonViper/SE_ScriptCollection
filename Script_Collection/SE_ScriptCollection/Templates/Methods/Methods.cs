@@ -63,6 +63,7 @@ namespace SE_ScriptCollection.Templates.Methods
             get
             {
                 IMyCockpit remote = GridTerminalSystem.GetBlockWithName ( COCKPIT_NAME ) as IMyCockpit;
+
                 if ( remote != null )
                 {
                     if ( remote.IsUnderControl )
