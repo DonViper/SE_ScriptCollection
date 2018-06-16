@@ -109,13 +109,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CivilShips\SmallGrid\Turtle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stations\GlacialisTechFacility.cs" />
     <Compile Include="Templates\Methods\Methods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="CivilShips\LargeGrid\" />
-    <Folder Include="CivilShips\SmallGrid\" />
     <Folder Include="MilitaryShips\LargeGrid\" />
     <Folder Include="MilitaryShips\SmallGrid\" />
   </ItemGroup>

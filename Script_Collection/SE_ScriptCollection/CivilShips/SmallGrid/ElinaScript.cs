@@ -101,7 +101,7 @@ namespace Elina
 
         /// <summary>
         /// Return true if the Remote is under control
-        /// </summary>
+        /// </summary>m
         /// <returns></returns>
         private bool IsControled
         {
