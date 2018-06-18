@@ -69,7 +69,8 @@ namespace GlacialisTechFacility
                 if ( G_LCD != null )
                 {
                     G_LCD.ShowPublicTextOnScreen ();
-                    G_LCD.WritePublicText ( "<--------------Status-------------->\n", false );
+                    G_LCD.WritePublicText ( "<-------------------Status------------------->\n", false );
+                    G_LCD.FontSize = 1.195f;
                 }
                 else
                 {
@@ -85,7 +86,8 @@ namespace GlacialisTechFacility
                     {
                         if ( !G_screens [i].CustomName.Contains ( LCD_TAGS [j] ) )
                         {
-                            G_screens [i].WritePublicText ( "<--------------Status-------------->\n", false );
+                            G_screens [i].WritePublicText ( "<-------------------Status------------------->\n", false );
+                            G_screens [i].FontSize = 1.195f;
                         }
                     }
 
@@ -264,7 +266,8 @@ namespace GlacialisTechFacility
                 }
                 else if ( G_screens [j].CustomName.Contains ( LCD_TAGS [1] ) )
                 {
-                    G_screens [j].WritePublicText ( "<---Ship Status--->\n", false );
+                    G_screens [j].WritePublicText ( "<-----------------Ship Status----------------->\n", false );
+                    G_screens [j].FontSize = 1.120f;
                 }
 
             }
@@ -402,19 +405,20 @@ namespace GlacialisTechFacility
                         //  If the screens name contains the <Gas> tag
                         if ( G_screens [i].CustomName.Contains ( LCD_TAGS [0] ) )
                         {
-                            G_screens [i].WritePublicText ( $"<--Oxygen and Hydrogen status-->\nHydro tanks: {hydro.Count} |<->| Oxy Tanks: {oxy.Count}\nHydrogen: {hydroLevel}%\nOxygen: {oxyLevel}%\n", false );
+                            G_screens [i].FontSize = 1.300f;
+                            G_screens [i].WritePublicText ( $"<--Oxygen and Hydrogen status-->\nHydro tanks: {hydro.Count} |<->| Oxy Tanks: {oxy.Count}\nHydrogen: {hydroLevel.ToString ( "F" )}%\nOxygen: {oxyLevel.ToString ( "F" )}%\n", false );
                         }
                         //  If the screens name does not contain any tags
                         else if ( !G_screens [i].CustomName.Contains ( LCD_TAGS [1] ) )
                         {
-                            G_screens [i].WritePublicText ( $"<--Gas status-->\nHydro: {hydroLevel}% |<->| Oxy: {oxyLevel}%\n", true );
+                            G_screens [i].WritePublicText ( $"<--Gas status-->\nHydro: {hydroLevel.ToString("F")}% |<->| Oxy: {oxyLevel.ToString("F")}%\n", true );
                         }
                     }
                 }
                 //  If single mode is active
                 else
                 {
-                    G_LCD.WritePublicText ( $"<--Gas status-->\nHydro: {hydroLevel}% |<->| Oxy: {oxyLevel}%\n", true );
+                    G_LCD.WritePublicText ( $"<--Gas status-->\nHydro: {hydroLevel.ToString ( "F" )}% |<->| Oxy: {oxyLevel.ToString ( "F" )}%\n", true );
                 }
             }
             //  If there is no tanks on the grid
