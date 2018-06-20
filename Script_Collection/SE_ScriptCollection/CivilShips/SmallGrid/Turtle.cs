@@ -25,12 +25,12 @@ namespace Turtle
         const string STORAGE_KEY = "<>";
         const float VOLUME_LIMIT = 50;
         enum LCD_POS { Left, Middle, Right };
-        Color [] ALERT_COLOR = { new Color ( 255, 0, 0 ), new Color ( 0, 255, 0 ) };   //  Color of display when Alerting (Red) or not (Green)
+        Color [] ALERT_COLOR = { new Color ( 255, 0, 0 ), new Color ( 0, 255, 0 ), new Color ( 150, 150, 0 ) };   //  Color of display when Alerting (Red) or not (Green)
         #endregion
         List<IMyTerminalBlock> AllBlocks = new List<IMyTerminalBlock> ();
         IMyProjector G_projecter;
         IMyTextPanel [] G_LCD = new IMyTextPanel [3];
-        bool G_capacityAlert;
+        bool G_capacityAlert = true;
 
         #region Indicator
         int G_isRunning = 0;
@@ -167,12 +167,16 @@ namespace Turtle
             //  Formula V / MV * 100 = P
             double percentage = ( ( (double) currentVolume / (double) maxVolume ) * 100 );
 
-            if ( percentage >= VOLUME_LIMIT )
+            if ( percentage >= ( VOLUME_LIMIT - 10 ) && percentage <= VOLUME_LIMIT)
+            {
+                G_LCD [(int) LCD_POS.Right].FontColor = ALERT_COLOR [2];
+            }
+            else if ( percentage >= VOLUME_LIMIT && !G_capacityAlert )
             {
                 G_LCD [(int) LCD_POS.Right].FontColor = ALERT_COLOR [0];
                 G_capacityAlert = true;
             }
-            else if ( percentage < VOLUME_LIMIT && G_capacityAlert )
+            else if (percentage < ( VOLUME_LIMIT - 10 ) && G_capacityAlert )
             {
                 G_LCD [(int) LCD_POS.Right].FontColor = ALERT_COLOR [1];
                 G_capacityAlert = false;

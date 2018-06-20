@@ -429,6 +429,11 @@ namespace GlacialisTechFacility
             }
         }
 
+        private void Inventory_Status ()
+        {
+
+        }
+
         private void Damage_Status ()
         {
 
