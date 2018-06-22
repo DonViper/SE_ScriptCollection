@@ -109,6 +109,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CivilShips\LargeGrid\MobileSpaceBase.cs" />
     <Compile Include="CivilShips\SmallGrid\Turtle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stations\AirLock.cs" />
@@ -116,7 +117,6 @@
     <Compile Include="Templates\Methods\Methods.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="CivilShips\LargeGrid\" />
     <Folder Include="MilitaryShips\LargeGrid\" />
     <Folder Include="MilitaryShips\SmallGrid\" />
   </ItemGroup>
