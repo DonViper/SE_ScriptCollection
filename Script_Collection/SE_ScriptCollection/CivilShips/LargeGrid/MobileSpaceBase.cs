@@ -32,8 +32,6 @@ namespace MobileSpaceBase
         int errorFLAG = 0;
         string errorText = null;
 
-        string output = null;
-
         public Program ()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update1;  //  UPdates itself every game tick.
@@ -54,6 +52,14 @@ namespace MobileSpaceBase
                     Fetch_Screens ();
                 }
 
+            }
+
+            if ( errorFLAG == 0 )
+            {
+                for ( int i = 0; i < G_screens.Count; i++ )
+                {
+                    G_screens [i].WritePublicText ( Inventory_Status () );
+                }
             }
 
             if ( errorFLAG == 0 )
@@ -104,7 +110,11 @@ namespace MobileSpaceBase
             {
                 if ( allBlocks [i].CustomName.Contains ( GRID_NAME ) )
                 {
-                    G_screens.Add ( allBlocks [i] as IMyTextPanel );
+                    if ( allBlocks [i].CustomName.Contains ( "LCD" ) )
+                    {
+                        G_screens.Add ( allBlocks [i] as IMyTextPanel );
+                    }
+
                 }
             }
 
@@ -119,20 +129,75 @@ namespace MobileSpaceBase
             }
         }
 
-        private void Inventory_Status ()
+        private string Inventory_Status ()
         {
             VRage.MyFixedPoint currentVolume = 0;
             VRage.MyFixedPoint maxVolume = 0;
 
+            List<Item> allItems = new List<Item> ();
+
+            for ( int i = 0; i < allBlocks.Count; i++ )
+            {
+                if ( allBlocks [i].HasInventory )
+                {
+                    for ( int j = 0; j < allBlocks [i].GetInventory ().GetItems ().Count; j++ )
+                    {
+                        var item = allBlocks [i].GetInventory ().GetItems () [j];
+
+                        if ( allItems.Exists ( element => element.Type == item.Content.TypeId.ToString () && element.Name == item.Content.SubtypeName ) )
+                        {
+                            allItems.Find ( element => element.Type == item.Content.TypeId.ToString () && element.Name == item.Content.SubtypeName ).Set_Amount ( item.Amount );
+                        }
+                        else
+                        {
+                            allItems.Add ( new Item ( item.Content.TypeId.ToString (), item.Content.SubtypeName, item.Amount ) );
+                        }
+                    }
+                }
+            }
+
+            string output = "";
+
+            string [] format = { "<Ore>\n", "<Ingots>\n", "<Components>\n", "<Ammunition>\n", "<Tools>\n" };
+
+            for ( int i = 0; i < allItems.Count; i++ )
+            {
+                if ( allItems [i].Type.Split ( '_' ) [1] == "Ore" )
+                {
+                    format [0] += $"        {allItems [i].ToString ()}\n";
+                }
+                else if ( allItems [i].Type.Split ( '_' ) [1] == "Ingot" )
+                {
+                    format [1] += $"        {allItems [i].ToString ()}\n";
+                }
+                else if ( allItems [i].Type.Split ( '_' ) [1] == "Component" )
+                {
+                    format [2] += $"        {allItems [i].ToString ()}\n";
+                }
+                else if ( allItems [i].Type.Split ( '_' ) [1] == "AmmoMagazine" )
+                {
+                    format [3] += $"        {allItems [i].ToString ()}\n";
+                }
+                else
+                {
+                    format [4] += $"        {allItems [i].ToString ()}\n";
+                }
+            }
+
+            output = $"{format [0]}{format [1]}{format [2]}{format [3]}{format [4]}";
+
+            return output;
         }
 
         private class Item
         {
+            public string Type { get; private set; }
             public string Name { get; private set; }
             public VRage.MyFixedPoint Amount { get; private set; }
 
-            public Item ( string _name, VRage.MyFixedPoint _amount )
+            public Item ( string _type, string _name, VRage.MyFixedPoint _amount )
             {
+                Type = _type;
                 Name = _name;
                 Amount = _amount;
             }
@@ -141,48 +206,20 @@ namespace MobileSpaceBase
             {
                 Amount += _amount;
             }
+
+            public override string ToString ()
+            {
+                decimal amount = (decimal) Amount;
+                string type = Type.Split ( '_' ) [1];
+
+                string output = $"{this.Name} {( ( type == "Ore" || type == "Ingot" ) ? ( type ) : ("") )}: {amount.ToString ( "#,##0.##" )}";
+
+                return output;
+            }
         }
         //to this comment.
         #region post-script
     }
-
-    class ResourceSearcher
-    {
-        private Dictionary<string, double> detectedAmounts = new Dictionary<string, double> ();
-
-        public void LookFor ( string type )
-        {
-            if ( detectedAmounts.ContainsKey ( type ) )
-                return;
-
-            detectedAmounts [type] = 0;
-        }
-
-        private void InspectInventory ( IMyInventory inv )
-        {
-            var items = inv.GetItems ();
-            for ( var i = 0; i < items.Count; ++i )
-            {
-                var item = items [i];
-
-                // You can use Content.TypeId.ToString() to get "MyObjectBuilder_Ore" / "MyObjectBuilder_Ingot" and the like.
-                // The SubtypeName will be the kind of ore/ingot/whatever.
-                var id = item.Content.TypeId.ToString () + "." + item.Content.SubtypeName;
-
-                if ( !detectedAmounts.ContainsKey ( id ) )
-                    continue;
-
-                detectedAmounts [id] += (double) item.Amount;
-            }
-        }
-
-        public double GetAmount ( string type )
-        {
-            double d;
-            if ( detectedAmounts.TryGetValue ( type, out d ) )
-                return d;
-            return 0;
-        }
-    }
 }
+
 #endregion
